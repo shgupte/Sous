@@ -3,13 +3,19 @@
 # dependencies
 node_modules/
 
+__pycache__
+
 # Expo
 .expo/
 dist/
 web-build/
 expo-env.d.ts
 
+.env
+.venv
+
 # Native
+.kotlin/
 *.orig.*
 *.jks
 *.p8
@@ -34,3 +40,5 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+app-example

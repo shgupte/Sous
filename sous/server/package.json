@@ -1,0 +1,12 @@
+{
+  "name": "@sous/server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Task runner for the Python backend server",
+  "scripts": {
+    "setup": "python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt",
+    "dev": "source .venv/bin/activate && uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload",
+    "start": "source .venv/bin/activate && gunicorn --bind 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker src.main:app",
+    "lint": "source .venv/bin/activate && ruff check ."
+  }
+}

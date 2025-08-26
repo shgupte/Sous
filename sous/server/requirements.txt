@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+youtube_transcript_api
+bs4
+groq
+dotenv
+chromadb
+websockets
+deepgram-sdk
