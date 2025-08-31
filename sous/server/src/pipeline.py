@@ -15,8 +15,11 @@ from deepgram import (
     AgentWebSocketEvents,
     SettingsOptions,
     AgentKeepAlive,
-    Output
+    Output,
+    FunctionCallRequest
 )
+
+AUDIO_FILE_PATH = "/Users/sgupte/Documents/GitHub/sous/sous/server/audio_data/Pasta.wav"
 
 # --- Environment and Client Setup ---
 load_dotenv()
@@ -38,7 +41,12 @@ def chroma_retrieve_docs(question, recipe_id, user_id):
         results = collection.query(
             query_texts=[question],
             n_results=6,
-            where={"recipe_id": recipe_id, "user_id": user_id},
+            where={
+                "$and": [
+                    {"recipe_id": {"$eq": "temp"}},
+                    {"user_id": {"$eq": "temp"}},
+                ]
+            }
         )
         return results["documents"]
     except Exception as e:
@@ -82,7 +90,8 @@ async def websocket_endpoint(
         "type": "function",
         "function": {
             "name": "get_rag_context",
-            "description": "Retrieves specific information about the recipe the user is currently working on to answer their questions.",
+            "description": "Retrieves specific information about the recipe the user is currently working on to answer their questions. "
+            "You should ALWAYS use this function when the user asks a question about the recipe.",
             "parameters": {
                 "type": "object",
                 "properties": { "question": {"type": "string", "description": "The user's specific question about the recipe."}},
@@ -90,9 +99,21 @@ async def websocket_endpoint(
             }
         }
     }
+
+    FUNCTION_DEFINITIONS = [
+    {
+            "name": "get_rag_context",
+            "description": "Retrieves specific information about the recipe the user is currently working on to answer their questions. "
+            "You should ALWAYS use this function when the user asks a question about the recipe.",
+            "parameters": {
+                "type": "object",
+                "properties": { "question": {"type": "string", "description": "The user's specific question about the recipe."}},
+                "required": ["question"]
+            }
+    }
+  ]
+
     
-    # You could define another tool like this:
-    # END_CALL_TOOL = { ... }
 
     try:
         api_key = os.getenv("DEEPGRAM_API_KEY")
@@ -119,6 +140,7 @@ async def websocket_endpoint(
         options.agent.listen.model = "nova-3"
         options.agent.think.provider.type = "open_ai"
         options.agent.think.provider.model = "gpt-4o-mini"
+        options.agent.think.functions = FUNCTION_DEFINITIONS
         options.agent.think.prompt = "You are an expert cooking assistant who is concise and practical."
         options.agent.speak.provider.type = "deepgram"
         options.agent.speak.provider.model = "aura-2-thalia-en"
@@ -127,30 +149,58 @@ async def websocket_endpoint(
         loop = asyncio.get_running_loop()
 
         # Handler for when the agent wants to call our function
-        def on_function_call(self, function_call, **kwargs):
+        def on_function_call(function_call, **kwargs):
             print("Running a function call")
-            function_name = function_call.get('name')
+            print(f"function_call type: {type(function_call)}")
+            print(f"kwargs: {kwargs}")
             
-            if function_name == 'get_rag_context':
-                print("✅ Agent is calling the RAG function...")
-                args = json.loads(function_call.get('arguments', '{}'))
+            # The function call data is in kwargs['function_call_request']
+            function_call_request = kwargs.get('function_call_request')
+            if not function_call_request:
+                print("No function call request found in kwargs")
+                return
+            
+            print(f"Function call request: {function_call_request}")
+            
+            # Extract the function details from the request
+            if hasattr(function_call_request, 'functions') and function_call_request.functions:
+                function_data = function_call_request.functions[0]  # Get the first function
                 
-                context = get_rag_context(
-                    question=args.get('question'),
-                    recipe_id=recipe_id,
-                    user_id=user_id
-                )
+                function_name = function_data.name
+                arguments = function_data.arguments
+                tool_call_id = function_data.id
                 
-                print(f"📦 Sending context back to agent: {context[:100]}...")
-                # Synchronous send, per Deepgram SDK docs
-                dg_connection.send(json.dumps({
-                    "type": "FunctionResponse",
-                    "request_id": kwargs.get('request_id'),
-                    "tool_call_id": function_call.get('tool_call_id'),
-                    "output": context
-                }))
+                print(f"Function name: {function_name}")
+                print(f"Arguments: {arguments}")
+                print(f"Tool call ID: {tool_call_id}")
+                
+                if function_name == 'get_rag_context':
+                    print("✅ Agent is calling the RAG function...")
+                    args = json.loads(arguments) if isinstance(arguments, str) else arguments
+                    
+                    context = get_rag_context(
+                        question=args.get('question'),
+                        recipe_id=recipe_id,
+                        user_id=user_id
+                    )
+                    
+                    print(f"📦 Sending context back to agent: {context[:100]}...")
+                    # Synchronous send, per Deepgram SDK docs
+                    dg_connection.send(json.dumps({
+                        "type": "FunctionCallResponse",
+                        "id": tool_call_id,#kwargs.get('request_id'),
+                        "name": "get_rag_context",
+                        "content": context
+                    }))
+                else:
+                    print(f"⚠️ Agent requested an unknown function: {function_name}")
             else:
-                print(f"⚠️ Agent requested an unknown function: {function_name}")
+                print("No functions found in function call request")
+                
+        # except Exception as e:
+        #     print(f"Error processing function call: {e}")
+        #     print(f"function_call: {function_call}")
+        #     print(f"kwargs: {kwargs}")
 
         # Handler for forwarding text (transcripts) to the client
         def on_conversation_text(self, conversation_text, **kwargs):
@@ -187,6 +237,12 @@ async def websocket_endpoint(
         def on_welcome(self, **kwargs):
             print("Successfully connected to Deepgram.")
 
+        def on_user_started_speaking(self, user_started_speaking, **kwargs):
+                print(f"Deepgram User Started Speaking: {user_started_speaking}")
+
+        def on_agent_thinking(self, agent_thinking, **kwargs):
+            print("Agent is thinking.")
+
         
 
         # --- Register the Event Handlers ---
@@ -197,22 +253,15 @@ async def websocket_endpoint(
         dg_connection.on(AgentWebSocketEvents.AgentAudioDone, on_agent_audio_done)
         dg_connection.on(AgentWebSocketEvents.Error, on_error)
         dg_connection.on(AgentWebSocketEvents.Close, on_close)
+        dg_connection.on(AgentWebSocketEvents.UserStartedSpeaking, on_user_started_speaking)
+        dg_connection.on(AgentWebSocketEvents.AgentThinking, on_agent_thinking)
         
          # dg_connection.on(AgentWebSocketEvents.Close, on_close)
-
-        # Configure and start the agent connection
-        # options = SettingsOptions(
-        #     agent={
-        #         "listen": {"model": "nova-2"},
-        #         "think": {"provider": "open_ai", "model": "gpt-4o"},
-        #         "speak": {"model": "aura-asteria-en"},
-        #         "tools": [RAG_TOOL] # Pass the list of all your tools here
-        #     }
-        # )
         
 
         dg_connection.start(options)
         print(f"🚀 Deepgram connection started for user '{user_id}' and recipe '{recipe_id}'.")
+
 
         # Main loop: Forward audio from your client to Deepgram
         def send_keep_alive():
@@ -220,9 +269,11 @@ async def websocket_endpoint(
               time.sleep(5)
               print("Keep alive!")
               dg_connection.send(str(AgentKeepAlive()))
+        
         # Start keep-alive in a separate thread
         keep_alive_thread = threading.Thread(target=send_keep_alive, daemon=True)
         keep_alive_thread.start()
+        
         while True:
             audio_data = await client_websocket.receive_bytes()
             dg_connection.send(audio_data)

@@ -1,0 +1,57 @@
+Welcome message: {
+    "type": "Welcome",
+    "request_id": "2cb050ed-ee56-4d31-ac9a-a94627b34d90"
+}
+Settings applied: {
+    "type": "SettingsApplied"
+}
+{"type": "ConversationText", "role": "assistant", "content": "Hello! How can I help you today?"}
+Unhandled event: {
+    "type": "Unhandled",
+    "raw": "{\"type\":\"History\",\"role\":\"assistant\",\"content\":\"Hello! How can I help you today?\"}"
+}
+User Started Speaking: {
+    "type": "UserStartedSpeaking"
+}
+{"type": "ConversationText", "role": "user", "content": "Yeah. As as much as it's worth"}
+Unhandled event: {
+    "type": "Unhandled",
+    "raw": "{\"type\":\"History\",\"role\":\"user\",\"content\":\"Yeah. As as much as it's worth\"}"
+}
+User Started Speaking: {
+    "type": "UserStartedSpeaking"
+}
+{"type": "ConversationText", "role": "user", "content": "many of us"}
+Unhandled event: {
+    "type": "Unhandled",
+    "raw": "{\"type\":\"History\",\"role\":\"user\",\"content\":\"many of us\"}"
+}
+User Started Speaking: {
+    "type": "UserStartedSpeaking"
+}
+{"type": "ConversationText", "role": "user", "content": "are looking forward to it just being"}
+Unhandled event: {
+    "type": "Unhandled",
+    "raw": "{\"type\":\"History\",\"role\":\"user\",\"content\":\"are looking forward to it just being\"}"
+}
+User Started Speaking: {
+    "type": "UserStartedSpeaking"
+}
+{"type": "ConversationText", "role": "user", "content": "And I think if it signifies anything,"}
+Unhandled event: {
+    "type": "Unhandled",
+    "raw": "{\"type\":\"History\",\"role\":\"user\",\"content\":\"And I think if it signifies anything,\"}"
+}
+{"type": "ConversationText", "role": "assistant", "content": "It sounds like you're expressing some anticipation about a significant event or change."}
+Unhandled event: {
+    "type": "Unhandled",
+    "raw": "{\"type\":\"History\",\"role\":\"assistant\",\"content\":\"It sounds like you're expressing some anticipation about a significant event or change.\"}"
+}
+{"type": "ConversationText", "role": "assistant", "content": "If you'd like to elaborate more on what \"it\" refers to, I\u2019d be happy to discuss its significance or any thoughts you have about it!"}
+Unhandled event: {
+    "type": "Unhandled",
+    "raw": "{\"type\":\"History\",\"role\":\"assistant\",\"content\":\"If you'd like to elaborate more on what \\\"it\\\" refers to, I\u2019d be happy to discuss its significance or any thoughts you have about it!\"}"
+}
+Connection closed: {
+    "type": "Close"
+}

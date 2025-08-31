@@ -1,14 +1,19 @@
 import asyncio
 import websockets
 import json
-
+import time
+import wave
 # --- CONFIGURATION ---
 # The URL of your running FastAPI WebSocket endpoint
 SERVER_URL = "ws://localhost:8000/listen/test/test"
 
 # The path to your test audio file
 # ❗ IMPORTANT: Update this path to point to your actual .wav file
-AUDIO_FILE_PATH = "/Users/sgupte/Documents/GitHub/sous/sous/server/audio_data/RAGwav.wav"
+AUDIO_FILE_PATH = "/Users/sgupte/Documents/GitHub/sous/sous/server/audio_data/spacewalk.wav"
+
+wf = wave.open(AUDIO_FILE_PATH,"rb")
+print(wf.getnchannels(), wf.getsampwidth(), wf.getframerate())
+
 
 
 async def run_test():
@@ -25,13 +30,22 @@ async def run_test():
             async def send_audio():
                 """Reads the audio file in chunks and sends it over the WebSocket."""
                 with open(AUDIO_FILE_PATH, "rb") as audio_file:
+                    header = audio_file.raw.read(44)
+
+      # Verify WAV header
+                    if header[0:4] != b'RIFF' or header[8:12] != b'WAVE':
+                        print("Invalid WAV header")
+                        return
+                    
                     while True:
-                        data = audio_file.read(4096)
+                        print("streaming audio")
+                        data = audio_file.raw.read(4096)
+                            
                         if not data:
                             break
                         await websocket.send(data)
                         await asyncio.sleep(0.01) # Small sleep to simulate real-time stream
-                print("✅ Finished streaming audio.")
+                    print("✅ Finished streaming audio.")
 
             async def receive_messages():
                 """Listens for and prints messages from the server."""
