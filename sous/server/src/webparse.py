@@ -22,6 +22,71 @@ def html_to_text(html_content):
     return soup.get_text(separator='\n', strip=True)
 
 
+def get_recipe_from_url(url):
+    """
+    Extracts recipe content from a URL with proper error handling.
+    Returns a structured recipe text or raises an exception.
+    """
+    try:
+        # Validate URL
+        if not url or not url.startswith(('http://', 'https://')):
+            raise ValueError("Invalid URL provided")
+        
+        print(f"Fetching recipe from: {url}")
+        html = fetch_html(url)
+        
+        if not html:
+            raise Exception("Failed to fetch HTML content from URL")
+        
+        # Extract recipe text
+        recipe = html_to_text(html)
+        
+        if not recipe or len(recipe.strip()) < 50:  # Basic validation
+            raise Exception("No meaningful recipe content found on the page")
+        
+        # Clean up the recipe text
+        recipe = clean_recipe_text(recipe)
+        
+        print(f"Successfully extracted recipe ({len(recipe)} characters)")
+        return recipe
+        
+    except Exception as e:
+        print(f"Error extracting recipe from {url}: {e}")
+        raise e
+
+def clean_recipe_text(text):
+    """
+    Cleans up extracted recipe text to remove common non-recipe content.
+    """
+    lines = text.split('\n')
+    cleaned_lines = []
+    
+    # Common patterns to skip
+    skip_patterns = [
+        'cookie', 'privacy', 'terms', 'advertisement', 'advert', 
+        'subscribe', 'newsletter', 'share', 'comment', 'footer',
+        'navigation', 'menu', 'header', 'sidebar', 'related',
+        '©', 'all rights reserved', 'powered by'
+    ]
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+            
+        # Skip lines that match skip patterns
+        if any(pattern in line.lower() for pattern in skip_patterns):
+            continue
+            
+        # Skip very short lines that are likely navigation
+        if len(line) < 10 and line.isupper():
+            continue
+            
+        cleaned_lines.append(line)
+    
+    return '\n'.join(cleaned_lines)
+
+
 def parse_recipe_with_llm(groq_client, html_content):
     """
     Uses an LLM to parse the recipe from raw HTML.
@@ -62,7 +127,7 @@ def parse_recipe_with_llm(groq_client, html_content):
     
     return recipe
 
-def get_recipe_from_url(groq_client, url):
+def get_recipe_from_url_llm(groq_client, url):
     """
     Main function to get a structured recipe from a website URL.
     """

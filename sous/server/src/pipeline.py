@@ -40,11 +40,12 @@ def chroma_retrieve_docs(question, recipe_id, user_id):
     try:
         results = collection.query(
             query_texts=[question],
-            n_results=6,
+            n_results=8,  # Increased to get more chunks
             where={
                 "$and": [
-                    {"recipe_id": {"$eq": "temp"}},
-                    {"user_id": {"$eq": "temp"}},
+                    {"recipe_id": {"$eq": str(recipe_id)}},
+                    {"user_id": {"$eq": str(user_id)}},
+                    {"chunk_type": {"$eq": "recipe_content"}}
                 ]
             }
         )
@@ -53,12 +54,15 @@ def chroma_retrieve_docs(question, recipe_id, user_id):
         print(f"ChromaDB retrieval error: {e}")
         return None
 
-def build_context(docs_in, max_chunks=6, max_chars=6000, separator="\n\n---\n\n"):
+def build_context(docs_in, max_chunks=8, max_chars=8000, separator="\n\n---\n\n"):
     if not docs_in or not docs_in[0]:
         return "There is no available context for this query."
     
     docs = docs_in[0][:max_chunks]
     cleaned = [d.strip() for d in docs if isinstance(d, str) and d.strip()]
+    
+    # Sort chunks by their natural order if possible
+    # This helps maintain recipe flow (ingredients -> instructions -> tips)
     context = separator.join(cleaned)
     return context[:max_chars]
 
@@ -220,10 +224,10 @@ async def websocket_endpoint(
         def on_agent_audio(self, data, **kwargs):
             print("Sending audio back.")
             # Run async send thread-safely
-            # asyncio.run_coroutine_threadsafe(
-            #     client_websocket.send_bytes(audio),
-            #     loop
-            # )
+            asyncio.run_coroutine_threadsafe(
+                client_websocket.send_bytes(data),
+                loop
+            )
         
         def on_agent_audio_done(self, **kwargs):
             print("Audio done.")

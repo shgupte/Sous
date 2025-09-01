@@ -1,13 +1,24 @@
 import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { router } from 'expo-router';
+import { Pressable, StyleSheet } from 'react-native';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import VoiceInterface from '@/components/VoiceInterface';
+import { IconSymbol } from '@/components/ui/IconSymbol';
+import { Colors } from '@/constants/Colors';
+import { useAuth } from '@/hooks/useAuth';
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { useRecipes } from '@/hooks/useRecipes';
 
 export default function HomeScreen() {
+  const { user } = useAuth();
+  const { recipes } = useRecipes(user?.id || null);
+  const colorScheme = useColorScheme();
+
+  const recentRecipes = recipes.slice(0, 3);
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -18,43 +29,91 @@ export default function HomeScreen() {
         />
       }>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
+        <ThemedText type="title">Welcome to Sous!</ThemedText>
         <HelloWave />
       </ThemedView>
       
-      {/* Voice Interface */}
-      <VoiceInterface userId="test" recipeId="test" />
-      
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
+      <ThemedView style={styles.welcomeSection}>
+        <ThemedText type="subtitle">Your Recipe Assistant</ThemedText>
         <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
+          Save your favorite recipes and get voice-guided cooking assistance. 
+          Start by adding your first recipe or explore your collection.
         </ThemedText>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
+
+      <ThemedView style={styles.quickActions}>
+        <ThemedText type="subtitle">Quick Actions</ThemedText>
+        
+        <Pressable
+          style={[
+            styles.actionButton,
+            { backgroundColor: Colors[colorScheme ?? 'light'].tint },
+          ]}
+          onPress={() => router.push('/(tabs)/recipes')}
+        >
+          <IconSymbol size={24} name="plus" color="white" />
+          <ThemedText style={styles.actionButtonText}>Add New Recipe</ThemedText>
+        </Pressable>
+
+        <Pressable
+          style={[
+            styles.actionButton,
+            styles.secondaryButton,
+            { borderColor: Colors[colorScheme ?? 'light'].tint },
+          ]}
+          onPress={() => router.push('/(tabs)/recipes')}
+        >
+          <IconSymbol size={24} name="book.fill" color={Colors[colorScheme ?? 'light'].tint} />
+          <ThemedText style={styles.secondaryButtonText}>View All Recipes</ThemedText>
+        </Pressable>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
+
+      {recentRecipes.length > 0 && (
+        <ThemedView style={styles.recentSection}>
+          <ThemedText type="subtitle">Recent Recipes</ThemedText>
+          {recentRecipes.map((recipe) => (
+            <Pressable
+              key={recipe.id}
+              style={[
+                styles.recipeItem,
+                { borderColor: Colors[colorScheme ?? 'light'].tint },
+              ]}
+              onPress={() => router.push({
+                pathname: '/recipe',
+                params: { recipeId: recipe.id },
+              })}
+            >
+              <ThemedText type="defaultSemiBold" style={styles.recipeName}>
+                {recipe.name}
+              </ThemedText>
+              <ThemedText style={styles.recipeDescription} numberOfLines={2}>
+                {recipe.description}
+              </ThemedText>
+            </Pressable>
+          ))}
+        </ThemedView>
+      )}
+
+      <ThemedView style={styles.featuresSection}>
+        <ThemedText type="subtitle">Features</ThemedText>
+        <ThemedView style={styles.featureItem}>
+          <IconSymbol size={20} name="mic.fill" color={Colors[colorScheme ?? 'light'].tint} />
+          <ThemedText style={styles.featureText}>
+            Voice-guided cooking assistance
+          </ThemedText>
+        </ThemedView>
+        <ThemedView style={styles.featureItem}>
+          <IconSymbol size={20} name="book.fill" color={Colors[colorScheme ?? 'light'].tint} />
+          <ThemedText style={styles.featureText}>
+            Save and organize your recipes
+          </ThemedText>
+        </ThemedView>
+        <ThemedView style={styles.featureItem}>
+          <IconSymbol size={20} name="person.fill" color={Colors[colorScheme ?? 'light'].tint} />
+          <ThemedText style={styles.featureText}>
+            Secure cloud storage with Supabase
+          </ThemedText>
+        </ThemedView>
       </ThemedView>
     </ParallaxScrollView>
   );
@@ -66,9 +125,62 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  stepContainer: {
+  welcomeSection: {
     gap: 8,
+    marginBottom: 16,
+  },
+  quickActions: {
+    gap: 12,
+    marginBottom: 16,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  actionButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  secondaryButton: {
+    borderWidth: 1,
+    backgroundColor: 'transparent',
+  },
+  secondaryButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  recentSection: {
+    gap: 12,
+    marginBottom: 16,
+  },
+  recipeItem: {
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  recipeName: {
+    marginBottom: 4,
+  },
+  recipeDescription: {
+    opacity: 0.7,
+    lineHeight: 18,
+  },
+  featuresSection: {
+    gap: 12,
     marginBottom: 8,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  featureText: {
+    flex: 1,
   },
   reactLogo: {
     height: 178,
