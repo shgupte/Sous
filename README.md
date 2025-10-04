@@ -1,33 +1,33 @@
-# Sous 🍳
+# Sous 
 
 > **Your AI-powered cooking companion with voice-guided assistance**
 
 Sous is a modern recipe management app that combines traditional recipe storage with cutting-edge AI voice assistance. Built with React Native and Expo, it provides a seamless cooking experience across mobile and web platforms.
 
-## ✨ Features
+## Features
 
-### 🎯 Core Functionality
+###  Core Functionality
 - **Recipe Management**: Add, view, edit, and delete your personal recipe collection
 - **URL Recipe Parsing**: Automatically extract recipes from cooking websites and YouTube videos
 - **Voice-Guided Cooking**: Real-time voice assistance during cooking with AI-powered responses
 - **Cross-Platform**: Native mobile apps (iOS/Android) and web support
 - **User Authentication**: Secure user accounts with Supabase integration
 
-### 🎤 Voice Interface
+###  Voice Interface
 - **Real-time Audio Streaming**: Continuous voice communication with AI assistant
 - **Smart Recipe Context**: AI understands your current recipe and cooking progress
 - **Multi-format Audio Support**: Handles both WAV and raw PCM audio formats
 - **Cross-platform Audio**: Optimized for both mobile and web audio APIs
 - **Live Audio Processing**: Real-time transcription and response generation
 
-### 🎨 User Experience
+### User Experience
 - **Modern UI/UX**: Clean, intuitive interface with dark/light theme support
 - **Responsive Design**: Optimized for all screen sizes and orientations
 - **Haptic Feedback**: Enhanced mobile interactions with tactile responses
 - **Offline Capability**: Core functionality works without internet connection
 - **Progressive Web App**: Installable web version with native app-like experience
 
-## 🏗️ Architecture
+##  Architecture
 
 ### Frontend (React Native + Expo)
 ```
@@ -65,7 +65,7 @@ server/
 - **Database**: Supabase (PostgreSQL), ChromaDB (vector storage)
 - **Audio**: Expo AV, Web Audio API, Live Audio Stream
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Node.js 18+ and npm
@@ -123,7 +123,7 @@ npm run android
 npm run web
 ```
 
-## 📱 Usage Guide
+## Usage Guide
 
 ### Getting Started
 1. **Sign Up/Login**: Create an account or sign in with existing credentials
@@ -143,7 +143,7 @@ npm run web
 - **YouTube Integration**: Extract recipes from cooking video transcripts
 - **Organize**: View, edit, and delete recipes from your personal collection
 
-## 🔧 Development
+##  Development
 
 ### Project Structure
 The project uses a monorepo structure with workspaces:
@@ -180,7 +180,7 @@ npm run lint       # Run Python linting with Ruff
 - **Commits**: Follow conventional commit format
 - **Testing**: Write tests for new features
 
-## 🧪 Testing
+##  Testing
 
 ### Frontend Testing
 ```bash
@@ -210,7 +210,7 @@ curl http://localhost:8000/
 3. Tap "Start Cooking" to access voice interface
 4. Test connection, recording, and audio playback
 
-## 🚀 Deployment
+##  Deployment
 
 ### Frontend Deployment
 ```bash
